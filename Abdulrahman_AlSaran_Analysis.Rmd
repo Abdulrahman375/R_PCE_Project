@@ -1,0 +1,312 @@
+---
+title: "Abdulrahman AlSaran"
+
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+urlcolor: blue
+---
+
+# Advanced Data Analysis Using R:  
+## Analysis of PCE on Gasoline and Energy Goods
+
+
+```{r setup, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(stargazer)
+library(janitor)
+library(kableExtra)
+library(reshape2)
+options(scipen=999)
+library(plm)
+
+```
+\hrulefill
+
+
+## Research Question
+
+- How has the  Price Indexes and Personal Consumption Expenditures for Gasoline and other energy goods evolved before and during the COVID-19 pandemic and after in the US,and what does this reveal about consumer financial behavior and economic resilience in the US?
+
+```{r,results = 'hide'}
+#Calling the full datasets
+PCE_US_Major_Products <- read_csv("PCE_by_Major_Type_of_Product.csv")
+PI_US_Major_Products <- read_csv("PI_for_PCE_by_Major_Type_of_Product.csv")
+#Changing names of Price index data to start With "PI_"
+PI_US_Major_Products <- PI_US_Major_Products %>%
+  mutate(type = paste0("PI_", type))
+
+#Joining
+PI_PCE_US_Major_Products <- PCE_US_Major_Products %>% 
+full_join(PI_US_Major_Products)
+
+
+
+
+```
+\hrulefill
+
+
+```{r,eval=FALSE}
+colnames(PI_PCE_US_Major_Products)
+```
+- The First columns called "type" represents the major products types that that have the measures of PCE over the years and the products that start with "PI_" means the price index.
+- The second columns till the last represents years from 1929-2022 that PCE is measured over.
+
+
+
+
+```{r}
+
+# install.packages("janitor")
+library(janitor)
+PI_PCE_US_Major_Products <- 
+  clean_names(PI_PCE_US_Major_Products) 
+```
+
+```{r}
+#converting all years columns into CHARCTER type for avoiding pivoting errors
+PI_PCE_US_Major_Products <- PI_PCE_US_Major_Products %>%
+  mutate(across(-1, as.character))
+# Pivoting the data
+Pivoted_PI_PCE_US_Major_Products <- PI_PCE_US_Major_Products %>%
+pivot_longer(cols = -1,
+names_to = "year", values_to = "pce")
+
+# filter Only "Gasoline and other energy goods"
+PI_PCE_US_Gasoline_Energy <- Pivoted_PI_PCE_US_Major_Products %>%
+  filter(`type` %in% c("Gasoline and other energy goods", 
+                      "PI_Gasoline and other energy goods"))
+#Removing the x at the beginning created by clean_names() to help turn values to numeric
+#later for graphing 
+PI_PCE_US_Gasoline_Energy$year <- sub("^x", "", PI_PCE_US_Gasoline_Energy$year)
+
+#making the year & PCE  values into numeric 
+PI_PCE_US_Gasoline_Energy$year <- as.numeric(as.character(PI_PCE_US_Gasoline_Energy$year))
+PI_PCE_US_Gasoline_Energy$pce <- as.numeric(as.character(PI_PCE_US_Gasoline_Energy$pce))
+
+#Using glimpse() 
+glimpse(PI_PCE_US_Gasoline_Energy)
+```
+- After using glimpse() on the transformed dataset :
+a. No.Rows : 18
+b. data Types : Character , Numeric
+c. Columns : type, year,pce
+
+```{r}
+#Using a function that shows a five number summary of my variables of interest.
+summary(PI_PCE_US_Gasoline_Energy)
+
+```
+
+\hrulefill
+
+```{r,warning = FALSE}
+#1-Graph for PCE on Gasoline and Other Energy Goods (2005-2022)
+PI_PCE_US_Gasoline_Energy %>% 
+  filter(`type` %in% "Gasoline and other energy goods"& year >=2005 & year <=2022) %>% 
+ggplot( aes(x = year, y = pce)) +
+  geom_line(aes(group=1), color="#46B6B8", size = 1.5) +
+  geom_point(color="black", size=2)+
+  labs(title = "1-PCE on Gasoline and Other Energy Goods (2005-2022)",
+       x = "Year",
+       y = "Personal Consumption Expenditures [Billions of dollars]",
+       caption = "Data Source: The U.S. Bureau of Economic Analysis") +
+  scale_x_continuous(breaks = seq(min(PI_PCE_US_Gasoline_Energy$year),
+                                max(PI_PCE_US_Gasoline_Energy$year), by = 1)) +
+   scale_y_continuous(breaks = pretty(PI_PCE_US_Gasoline_Energy$pce, n = 20))+
+  theme_minimal()
+
+#2- Price Indexes for PCE on Gasoline and Other Energy Goods (2005-2022)
+PI_PCE_US_Gasoline_Energy %>%
+  filter(`type` %in% "PI_Gasoline and other energy goods" & year >=2005 & year <=2022) %>%
+ggplot(aes(x = year, y = pce, fill = as.factor(year))) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  labs(title = "2- Price Indexes for PCE on Gasoline and Other Energy Goods (05-22)",
+       x = "Year",
+       y = "Personal Consumption Expenditures [Billions of dollars]",
+       caption = "Data Source: The U.S. Bureau of Economic Analysis") +
+  scale_x_continuous(breaks = seq(min(PI_PCE_US_Gasoline_Energy$year),
+                                  max(PI_PCE_US_Gasoline_Energy$year), by = 2))  +
+  theme_minimal()
+```
+    
+• Advanced Data Analysis Using R: Analysis of PCE on Gasoline and Energy Goods
+\newpage
+  
+
+## For the rest of the report i will choose the PCE on Gasoline and Other Energy Goods variable to answer them & i choose the period from 2005 - 2022 for analsyis.
+
+- As you can see in Graph 1 the PCE started of with a rise until a sudden dip from 390 billion to 290 billion from 2008-2009, then A subsequent rise of 29.27% is observed from 2009 to 2011, followed by a relatively steady phase until 2014, then Another notable dip of about 29.27% occurs between 2014 and 2016.
+
+- But,the biggest dip in number happened between 2019-2020 and its when the pandemic hits.
+- Then from 2020 -2022 after the pandemic the PCE has increased by 52.9% which is really a huge increase. \
+
+\hrulefill
+
+
+- Hypothesis:\
+
+The 2008-2009 dip is likely attributed to the financial crisis during that period, impacting consumer spending and economic activities adversely.\
+
+The 2014-2016 dip may be associated with a global increase in oil supply, primarily due to booming U.S. shale oil production, coupled with declining demand, particularly from mid-2015 to early 2016.\
+
+The exponential increase in PCE from 2020 to 2022 could be driven by economic recovery post the pandemic-induced recession, reviving energy demand, alongside a surge in crude oil prices during this period.\
+
+
+- Future Exploration:\
+
+Exploring the correlation between economic recessions, global oil supply, and PCE on Gasoline and Other Energy Goods could provide deeper insights. \
+
+Investigating the impact of government energy policies and consumer behavior on PCE during various economic conditions could be an avenue for further research.\
+
+Statistical analysis to validate the observed trends and to understand the magnitude and significance of the impact of economic conditions on PCE would be beneficial.\
+
+
+\hrulefill
+
+## Why i choose this period?
+
+I choose the period 2005 to 2022 to understand things like the 2008 crises, and the 2014-2016 booming U.S. shale oil production to find hints at consumer spending's susceptibility to global economic conditions.
+Which Also helps me to analyse the Pandemic Onset at 2019-2020 when A sharp decline in PCE aligns with reduced mobility and economic contraction, and Post-Pandemic Recovery 2020-2022 The significant PCE increase possibly 
+reflects economic recovery and anticipatory buying due to potential price hikes. \
+
+Regarding any potential answers or raise more questions, i reached some Hypothetical Conclusions: \
+1- Trends suggest a correlation between economic conditions and PCE on energy goods.\
+2- The post-pandemic PCE rise could indicate economic resilience and altered consumer behavior.
+
+As for New questions these came to mind regarding the findings:\
+1- What policies influenced these PCE trends?\
+2- How did consumer behavior towards energy consumption evolve during and post-pandemic?\
+
+In conclusion ,The preliminary analysis lays groundwork for deeper investigation into economic resilience, consumer behavior, and policy implications concerning energy goods' consumption during varying economic scenarios.
+
+\hrulefill
+
+
+#After diving into data exploration, it's time to operationalize the insights.
+
+
+- I selected the Personal Consumption Expenditures (PCE) on Gasoline And Other Energy Goods from 1929-2022 rather than starting from 2005 to get more accurate results as the dependent variable (Y), and wages and salaries across the same time frame as the independent variable (X).\
+
+- Rationale:\
+Analyzing the impact of wage fluctuations on energy spending across a period with significant economic events like the 2008 financial crisis and the COVID-19 pandemic can offer insights into consumer financial behavior For instance, are consumers cutting back on energy spending when earnings are lower? Or are they continuing to spend.
+
+understanding this relationship may help decision makers devise measures to stabilize income or energy prices during economic downturns to support consumer spending and overall economic stability.\
+
+This analysis aligns with the original research question, shedding light on economic resilience in the US.
+
+
+\hrulefill
+\vspace{1cm}
+\newpage
+
+# Regression formula:
+
+$$ PCE|Gasoline|EnergyGoods = \beta_0  + \beta_1WagesAndSalaries + \epsilon $$ 
+
+
+### 1-Cleaning and Transforming the data for the regression
+
+```{r,warning = FALSE}
+#Preparing variables in the regression
+Regression_data <- PI_PCE_US_Major_Products %>% 
+    filter(`type` %in% c("Gasoline and other energy goods", 
+                      "PI_Gasoline and other energy goods",
+                      "Wages and salaries"))
+
+# Change the format to better suit a regression using library(reshape2)
+melted_data <- melt(Regression_data, id.vars = "type")
+Regression_data <- dcast(melted_data, variable ~ type, value.var = "value")
+Regression_data$variable <- sub("^x", "", Regression_data$variable)
+Regression_data$variable <- as.numeric(as.character(Regression_data$variable))
+Regression_data <- Regression_data %>% rename(year = variable)
+Regression_data$`PI_Gasoline and other energy goods`<-as.numeric(
+as.character( Regression_data$`PI_Gasoline and other energy goods`))
+
+
+#Clean column names 
+Regression_data <- clean_names(Regression_data)
+
+#converting millions to billions 
+Regression_data$wages_and_salaries <- as.numeric(as.character(Regression_data$wages_and_salaries))
+Regression_data$wages_and_salaries <- Regression_data$wages_and_salaries/1000
+
+
+
+```
+### 2- The Regression
+
+```{r}
+
+PCE_Regression <- lm( gasoline_and_other_energy_goods ~ wages_and_salaries 
+                      ,data = Regression_data)
+
+summary(PCE_Regression)
+
+```
+
+
+\hrulefill
+\vspace{1cm}
+
+##Interpretation :
+
+- Coefficients:
+a. Intercept: When wages and salaries are zero, the expected Personal Consumption Expenditures (PCE) on Gasoline And Other Energy Goods is $3.157 billion.\
+b. Slope: For every 1 billion increase in wages and salaries, the PCE on Gasoline And Other Energy Goods increases by approximately $43.263 billion .\
+
+- Significance:
+The p-value for wages and salaries is extremely low (0.0000000000000002), indicating a statistically significant relationship at the 5% level (and even at the 1% level). This suggests that there's a statistically significant positive relationship between wages and salaries and PCE on Gasoline And Other Energy Goods.\
+
+Model Fit:
+
+Multiple R^2 =0.9256: About 92.26% of the variability in PCE on Gasoline And Other Energy Goods is explained by wages and salaries. This is a substantial amount of explanatory power, indicating a high model fit.\
+
+Adjusted R^2 =0.9247  : after adjusting for the number of predictors, about 92.47% of the variability is explained, which still indicates a high model fit.
+
+F-statistic (1033) with a p-value (0.00000000000000022) This also suggests the model is statistically significant at the 5% level (and even at the 1% level).\
+
+ The model suggests a positive and statistically significant relationship between wages and salaries and PCE on Gasoline And Other Energy Goods with a moderate explanatory power.
+
+\hrulefill
+\newpage
+
+- Multi-variate regression using an additional predictor : 
+
+i will add Price index for PCE  on Gasoline And Other Energy Goods as a second x
+
+
+$$ PCE|Gasoline|EnergyGoods = \beta_0  + \beta_1WagesAndSalaries + \beta_2 PiForPCE|Gas|EnergyGoods + \epsilon $$
+
+
+```{r}
+
+PCE_Regression_multi <- lm( gasoline_and_other_energy_goods ~ wages_and_salaries + 
+                      pi_gasoline_and_other_energy_goods,data = Regression_data)
+
+summary(PCE_Regression_multi)
+
+```
+
+- Coefficients:
+a. Intercept: When both wages and salaries and the price index are zero, the expected PCE on Gasoline And Other Energy Goods is $2.36 billion.\
+b. Wages and Salaries : For every 1 billion increase in wages and salaries, the PCE on Gasoline And Other Energy Goods increases by approximately $5.10256 billion, assuming other factors remain constant.\
+c. Price Index :  For every unit increase in the price index, the PCE on Gasoline And Other Energy Goods increases by approximately $2.84860 billion, assuming other factors remain constant.
+
+- Significance:\
+a.The p-value for wages and salaries is 0.00000000205, which is statistically significant at the 5% level, indicating that the relationship between wages and salaries and PCE on Gasoline And Other Energy Goods is statistically highly significant at the 5% level.\
+b.The p-value for the price index is practically 0, indicating also a highly statistically significant relationship with the PCE on Gasoline And Other Energy Goods.
+
+- Model Fit:\
+Multiple R^2 =0.9979: The model explains about 99.79% of the variability in PCE on Gasoline And Other Energy Goods.\
+Adjusted R^2 =0.9978  : Adjusting for the number of predictors, about 99.78% of the variability is explained, still showing a strong model fit.\
+F-statistic (19,300) with a p-value (0.00000000000000022) : This suggests the model is highly statistically significant.\
+
+Adding the Price Index for PCE on Gasoline And Other Energy Goods as a second explanatory variable greatly improved the model fit and explanatory power. This model better aligns with my research question and provides more robust insights into the factors influencing PCE on Gasoline And Other Energy Goods.
