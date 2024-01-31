@@ -29,6 +29,9 @@ library(plm)
 ```
 \hrulefill
 
+# Introduction 
+- In this report, titled "Advanced Data Analysis Using R: Analysis of PCE on Gasoline and Energy Goods," I delve into a detailed examination of Price Indexes and Personal Consumption Expenditures (PCE) for Gasoline and other energy goods in the United States. The analysis spans from 2005 to 2022, a period chosen for its economic significance, including the 2008 financial crisis and the COVID-19 pandemic. The report aims to understand how these expenditures have evolved over time and what this reveals about consumer financial behavior and economic resilience in the U.S.
+
 
 ## Research Question
 
@@ -310,3 +313,7 @@ Adjusted R^2 =0.9978  : Adjusting for the number of predictors, about 99.78% of 
 F-statistic (19,300) with a p-value (0.00000000000000022) : This suggests the model is highly statistically significant.\
 
 Adding the Price Index for PCE on Gasoline And Other Energy Goods as a second explanatory variable greatly improved the model fit and explanatory power. This model better aligns with my research question and provides more robust insights into the factors influencing PCE on Gasoline And Other Energy Goods.
+
+# Conclusion:
+
+The report concludes that the preliminary analysis lays a strong foundation for further investigation into the dynamics of economic resilience, consumer behavior, and policy implications concerning energy goods’ consumption during various economic scenarios. It underscores the significant correlation between economic conditions and PCE on energy goods, particularly during the post-pandemic period, indicating economic recovery and potential changes in consumer behavior. The report suggests that future research should focus on the impact of government policies and consumer behavior on PCE under different economic conditions, enhancing understanding of economic resilience and consumer spending patterns.
